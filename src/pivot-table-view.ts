@@ -8,14 +8,19 @@ export class PivotTableView {
         readonly columns: Cell[][],
         readonly rows: Cell[][],
         readonly values: any[][],
+        readonly offset: {
+            columns: number;
+            rows: number;
+        },
     ) {}
 }
 
 export class Cell {
-    colspan = 1;
-    rowspan = 1;
-
-    constructor(readonly label: string) {}
+    constructor(
+        readonly label: string,
+        readonly colspan: number,
+        readonly rowspan: number,
+    ) {}
 }
 
 export function createAggregatedTable(
@@ -25,18 +30,26 @@ export function createAggregatedTable(
     const serviceTable = new ServiceTable(setup);
 
     tree.iterate(
-        (label: string, i: number) => {
+        (key: string | symbol, i: number) => {
+            const label =
+                typeof key === "symbol" ? setup.getValueLabel(key) : key;
+
             serviceTable.addHeader(i, label);
         },
-        (value: any) => {
-            serviceTable.addValue(value);
-        },
+        setup.columns.length > 0
+            ? (value: any) => {
+                  serviceTable.addValue(value);
+              }
+            : (value: any): void => {
+                  serviceTable.addValueNoColumns(value);
+              },
     );
 
     return new PivotTableView(
         serviceTable.getColumns(),
         serviceTable.getRows(),
         serviceTable.getValues(),
+        serviceTable.getOffset(),
     );
 }
 
@@ -49,14 +62,13 @@ class ServiceTable {
 
     private values: any[][] = [];
 
-    constructor(setup: PivotTableSetup) {
-        this.rows = this.array(setup.rows.length);
+    constructor(private setup: PivotTableSetup) {
+        this.rows = array(setup.rows.length);
         this.rowsLength = this.rows.length;
         this.rowsLastIndex = this.rowsLength - 1;
-        this.columns =
-            Array.isArray(setup.values) && setup.values.length > 1
-                ? this.array(setup.columns.length + 1)
-                : this.array(setup.columns.length);
+        this.columns = setup.showValuesLabels
+            ? array(setup.columns.length + 1)
+            : array(setup.columns.length);
         this.columnsLastIndex = this.columns.length - 1;
     }
 
@@ -69,10 +81,30 @@ class ServiceTable {
         } else {
             i -= this.rowsLength;
 
-            this.columns[i].push(new ServiceCell(label));
+            if (i > this.columnsLastIndex) {
+                if (this.setup.showValuesLabels)
+                    this.columns[i].push(new ServiceCell(label));
 
-            if (i === this.columnsLastIndex)
                 this.columns.forEach(this.increaseSpanToLast);
+            } else {
+                if (this.setup.columns.length === 0) {
+                    const [row] = this.columns;
+                    const exists = row.find(item => item.label === label);
+
+                    if (not(exists)) {
+                        const cell = new ServiceCell(label);
+
+                        cell.span = 1;
+
+                        row.push(cell);
+                    }
+                } else {
+                    this.columns[i].push(new ServiceCell(label));
+
+                    if (i === this.columnsLastIndex)
+                        this.columns.forEach(this.increaseSpanToLast);
+                }
+            }
         }
     }
 
@@ -85,12 +117,52 @@ class ServiceTable {
         this.values[row][column] = value;
     }
 
+    addValueNoColumns(value: any): void {
+        const row = this.rows[this.rowsLastIndex].length - 1;
+
+        if (not(this.values[row])) this.values[row] = [];
+
+        this.values[row].push(value);
+    }
+
     getColumns(): Cell[][] {
-        return this.toCell(this.columns, "rowspan");
+        const cells: Cell[][] = [];
+
+        this.columns.forEach((item, row) => {
+            let column = 0;
+
+            item.forEach(({ span, label }) => {
+                if (not(cells[row])) cells[row] = [];
+
+                const cell = new Cell(label, span, 1);
+
+                cells[row][column] = cell;
+
+                column += span;
+            });
+        });
+
+        return cells;
     }
 
     getRows(): Cell[][] {
-        return this.toCell(this.rows, "colspan");
+        const cells: Cell[][] = [];
+
+        this.rows.forEach((item, column) => {
+            let row = 0;
+
+            item.forEach(({ span, label }) => {
+                if (not(cells[row])) cells[row] = [];
+
+                const cell = new Cell(label, 1, span);
+
+                cells[row][column] = cell;
+
+                row += span;
+            });
+        });
+
+        return cells;
     }
 
     getValues(): any[][] {
@@ -105,10 +177,11 @@ class ServiceTable {
         return this.values;
     }
 
-    private array(length: number): ServiceCell[][] {
-        return Array(length)
-            .fill(null)
-            .map(() => []);
+    getOffset(): PivotTableView["offset"] {
+        return {
+            columns: this.columns.length,
+            rows: this.rows.length,
+        };
     }
 
     private increaseSpanToLast(this: unknown, item: ServiceCell[]): void {
@@ -116,26 +189,12 @@ class ServiceTable {
 
         last.span += 1;
     }
+}
 
-    private toCell(source: ServiceCell[][], key: CellSpanKey): Cell[][] {
-        const cells: Cell[][] = [];
-
-        source.forEach((item, column) => {
-            let row = 0;
-
-            item.forEach(({ span, label }) => {
-                if (not(cells[row])) cells[row] = [];
-
-                const cell = new Cell(label);
-
-                cell[key] = span;
-                cells[row][column] = cell;
-
-                row += span;
-            });
-        });
-        return cells;
-    }
+function array(length: number): ServiceCell[][] {
+    return Array(length)
+        .fill(null)
+        .map(() => []);
 }
 
 class ServiceCell {

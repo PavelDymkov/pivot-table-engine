@@ -45,7 +45,7 @@ class NumberType extends BaseType {
     }
 }
 
-export const Schema: Record<string, Column> = {
+export const Schema: Record<"String" | "Number", Column> = {
     String: new StringType(),
     Number: new NumberType(),
 };

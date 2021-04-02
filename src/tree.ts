@@ -5,9 +5,8 @@ import {
     AggregateFunctionFactory,
 } from "./aggregate-function";
 
-type Node = Map<string | symbol, Node | AggregateFunction>;
-
-const aggregateFunctionLink = Symbol();
+type Key = string | symbol;
+type Node = Map<Key, Node | AggregateFunction>;
 
 export class Tree {
     readonly root: Node = new Map();
@@ -18,58 +17,54 @@ export class Tree {
         this.current = this.root;
     }
 
-    toChild(path: string): void {
-        this.touch(path);
+    toChild(key: Key): void {
+        this.touch(key);
 
-        this.current = this.current.get(path) as Node;
+        this.current = this.current.get(key) as Node;
     }
 
-    touch(path: string): void {
-        if (not(this.current.has(path))) this.current.set(path, new Map());
+    touch(key: Key): void {
+        if (not(this.current.has(key))) this.current.set(key, new Map());
     }
 
-    finalize(
-        pathArray: string[],
+    aggregate(
+        key: Key,
         value: any,
         aggregateFunctionFactory: AggregateFunctionFactory,
     ): void {
-        const node = pathArray.reduce((node, path) => {
-            if (not(node.has(path))) node.set(path, new Map());
+        let aggregateFunction: AggregateFunction;
 
-            return node.get(path) as Node;
-        }, this.current);
+        if (this.current.has(key)) {
+            aggregateFunction = this.current.get(key) as AggregateFunction;
+        } else {
+            aggregateFunction = aggregateFunctionFactory();
 
-        if (not(node.has(aggregateFunctionLink)))
-            node.set(aggregateFunctionLink, aggregateFunctionFactory());
+            this.current.set(key, aggregateFunction);
+        }
 
-        (node.get(aggregateFunctionLink) as AggregateFunction).next(value);
+        aggregateFunction.next(value);
     }
 
-    iterate(callbackLabel: CallbackLabel, callbackValue: CallbackValue): void {
+    iterate(callbackLabel: CallbackKey, callbackValue: CallbackValue): void {
         iterateTree(this.root, callbackLabel, callbackValue, 0);
     }
 }
 
-type CallbackLabel = (label: string, level: number) => void;
+type CallbackKey = (key: Key, level: number) => void;
 type CallbackValue = (value: any) => void;
 
 function iterateTree(
     map: Node,
-    callbackLabel: (path: string, level: number) => void,
+    callbackKey: (key: Key, level: number) => void,
     callbackValue: (value: any) => void,
     level: number,
 ): void {
-    map.forEach((value, path) => {
-        if (path === aggregateFunctionLink) {
-            const aggregateFunction = value as AggregateFunction;
+    map.forEach((value, key) => {
+        callbackKey(key, level);
 
-            callbackValue(aggregateFunction.getSummeryValue());
-        } else {
-            callbackLabel(path as string, level);
-
-            if (value instanceof Map && value.size > 0) {
-                iterateTree(value, callbackLabel, callbackValue, level + 1);
-            }
-        }
+        if (value instanceof AggregateFunction)
+            callbackValue(value.getSummeryValue());
+        else if (value instanceof Map && value.size > 0)
+            iterateTree(value, callbackKey, callbackValue, level + 1);
     });
 }

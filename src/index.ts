@@ -4,4 +4,4 @@ export * from "./pivot-table";
 export * from "./schema";
 export * from "./table";
 
-export { Setup, Values } from "./pivot-table-setup";
+export { Setup, Values, ValuesLabeled } from "./pivot-table-setup";
