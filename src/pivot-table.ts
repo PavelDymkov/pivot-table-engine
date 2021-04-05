@@ -3,6 +3,7 @@ import { Aggregator } from "./aggregator";
 import { FilterItem } from "./filter";
 import { PivotTableSetup, Setup } from "./pivot-table-setup";
 import { SortItem } from "./sort";
+import { PivotTableView } from "./pivot-table-view";
 import { Table } from "./table";
 
 const filters = Symbol();
@@ -36,7 +37,7 @@ export class PivotTable {
 
     aggregate(
         aggregateFunctions: Record<number, AggregateFunctionFactory> = {},
-    ): any {
+    ): PivotTableView {
         const aggregator = new Aggregator(
             this[table],
             this[setup],

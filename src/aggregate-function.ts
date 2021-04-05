@@ -35,6 +35,13 @@ class Count extends AggregateFunction {
 
 export const count: AggregateFunctionFactory = () => new Count();
 
+class Group extends AggregateFunction {
+    next(): void {}
+    getSummeryValue(): any {}
+}
+
+export const group: AggregateFunctionFactory = () => new Group();
+
 class Maximum extends AggregateFunction {
     private max = 0;
 

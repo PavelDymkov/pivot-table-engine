@@ -1,11 +1,13 @@
-import { AggregateFunctionFactory, sum } from "./aggregate-function";
+import { AggregateFunctionFactory, group, sum } from "./aggregate-function";
 import { PivotTableView, createAggregatedTable } from "./pivot-table-view";
-import { PivotTableSetup, Values } from "./pivot-table-setup";
+import { PivotTableSetup, ValuesInternal } from "./pivot-table-setup";
 import { Table } from "./table";
 import { Tree } from "./tree";
 import { SortItem, SortOrder } from "./sort";
 import { Column } from "./schema";
 import { FilterItem } from "./filter";
+
+const Group = group().constructor;
 
 export class Aggregator {
     private rowIndexArray!: Int32Array;
@@ -32,6 +34,14 @@ export class Aggregator {
 
         const { columns, rows, values } = this.setup;
 
+        const valuesGroup: ValuesInternal[] = [];
+        const valuesAggregate: ValuesInternal[] = [];
+
+        values.forEach(item => {
+            if (item.aggregateFunction instanceof Group) valuesGroup.push(item);
+            else valuesAggregate.push(item);
+        });
+
         this.rowIndexArray.forEach(row => {
             tree.toRootNode();
 
@@ -41,42 +51,25 @@ export class Aggregator {
                 tree.toChild(label);
             });
 
-            const columnsLastIndex = columns.length - 1;
-            const isManyValues = Array.isArray(values) && values.length > 1;
-
-            columns.forEach((column, i) => {
+            columns.forEach(column => {
                 const label = this.table.getLabel(column, row);
 
-                if (i === columnsLastIndex) {
-                    if (isManyValues) {
-                        (values as Values[]).forEach(item => {
-                            tree.finalize(
-                                [label, item.label],
-                                this.table.getValue(item.index, row),
-                                this.getAggregateFunctionFactory(item.index),
-                            );
-                        });
-                    } else {
-                        tree.finalize(
-                            [label],
-                            this.table.getValue(column, row),
-                            this.getAggregateFunctionFactory(column),
-                        );
-                    }
-                } else {
-                    tree.toChild(label);
-                }
+                tree.toChild(label);
             });
 
-            if (columns.length === 0 && Array.isArray(values)) {
-                values.forEach(({ label, index }) => {
-                    tree.finalize(
-                        [label],
-                        this.table.getValue(index, row),
-                        this.getAggregateFunctionFactory(index),
-                    );
-                });
-            }
+            valuesGroup.forEach(({ index: column }) => {
+                const label = this.table.getLabel(column, row);
+
+                tree.toChild(label);
+            });
+
+            values.forEach(({ key, index }) => {
+                tree.aggregate(
+                    key,
+                    this.table.getValue(index, row),
+                    this.getAggregateFunctionFactory(index),
+                );
+            });
         });
 
         return createAggregatedTable(tree, this.setup);
