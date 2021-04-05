@@ -5,7 +5,6 @@ import { PivotTableSetup, Setup } from "./pivot-table-setup";
 import { SortItem } from "./sort";
 import { PivotTableView } from "./pivot-table-view";
 import { Table } from "./table";
-
 const filters = Symbol();
 const setup = Symbol();
 const sort = Symbol();

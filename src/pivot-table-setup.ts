@@ -1,5 +1,4 @@
 import { not } from "logical-not";
-
 import { AggregateFunctionFactory } from "./aggregate-function";
 
 export class PivotTableSetup {
