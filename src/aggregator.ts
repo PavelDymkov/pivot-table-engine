@@ -3,9 +3,9 @@ import { PivotTableView, createAggregatedTable } from "./pivot-table-view";
 import { PivotTableSetup, Values } from "./pivot-table-setup";
 import { Table } from "./table";
 import { Tree } from "./tree";
-import { Filter } from "./filters";
-import { Sort, SortDirection } from "./data";
+import { SortItem, SortOrder } from "./sort";
 import { Column } from "./schema";
+import { FilterItem } from "./filter";
 
 export class Aggregator {
     private rowIndexArray!: Int32Array;
@@ -82,17 +82,17 @@ export class Aggregator {
         return createAggregatedTable(tree, this.setup);
     }
 
-    filter(filters: Filter[]): void {
-        this.rowIndexArray = this.rowIndexArray.filter(rowIndex => {
-            return filters.every(filter => {
+    filter(filters: FilterItem[]): void {
+        this.rowIndexArray = this.rowIndexArray.filter(rowIndex =>
+            filters.every(filter => {
                 const value = this.table.getValue(filter.column, rowIndex);
 
-                return filter.check(value);
-            });
-        });
+                return filter.item.check(value);
+            }),
+        );
     }
 
-    sort(items: Sort[]): void {
+    sort(items: SortItem[]): void {
         const columnTypeMap: Record<number, Column> = {};
 
         items.forEach(({ column }) => {
@@ -101,7 +101,7 @@ export class Aggregator {
 
         this.rowIndexArray.sort((a: number, b: number) => {
             for (let i = 0, lim = items.length; i < lim; i++) {
-                const { column, direction } = items[i];
+                const { column, order } = items[i];
 
                 const valueA = this.table.getValue(column, a);
                 const valueB = this.table.getValue(column, b);
@@ -110,7 +110,7 @@ export class Aggregator {
 
                 if (compared === 0) continue;
 
-                return direction === SortDirection.AZ ? compared : -compared;
+                return order === SortOrder.AZ ? compared : -compared;
             }
 
             return 0;

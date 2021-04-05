@@ -1,4 +1,4 @@
-import not from "logical-not";
+import { not } from "logical-not";
 
 export class PivotTableSetup {
     private value: Setup = {

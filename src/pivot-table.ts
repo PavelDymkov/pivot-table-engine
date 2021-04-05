@@ -1,8 +1,8 @@
 import { AggregateFunctionFactory } from "./aggregate-function";
 import { Aggregator } from "./aggregator";
-import { Filter, Sort } from "./data";
-import { Filter as FilterInternal, filters as filtersMap } from "./filters";
+import { FilterItem } from "./filter";
 import { PivotTableSetup, Setup } from "./pivot-table-setup";
+import { SortItem } from "./sort";
 import { Table } from "./table";
 
 const filters = Symbol();
@@ -17,29 +17,21 @@ export class PivotTable {
         });
     }
 
-    [filters]: FilterInternal[] = [];
+    [filters]: FilterItem[] = [];
     [setup] = new PivotTableSetup();
-    [sort]: Sort[] = [];
+    [sort]: SortItem[] = [];
     [table]: Table;
 
     setup(source: Partial<Setup>): void {
         this[setup].update(source, this[table].columns);
     }
 
-    setFilters(items: Filter[]): void {
-        this[filters] = [];
-
-        items?.forEach(({ type, column, value }) => {
-            const getFilter = filtersMap[type];
-
-            if (getFilter) this[filters].push(getFilter(column, value));
-        });
+    setFilters(items: FilterItem[]): void {
+        this[filters] = items;
     }
 
-    setSort(items: Sort[]): void {
-        this[sort] = [];
-
-        items?.forEach(item => this[sort].push(item));
+    setSort(items: SortItem[]): void {
+        this[sort] = items;
     }
 
     aggregate(
