@@ -32,6 +32,7 @@ export class NodeTitle {
     }
 
     readonly children: NodeTitle[] = [];
+    public readonly connectTo: any[] = [];
 
     constructor(
         public readonly column: number,
@@ -55,6 +56,7 @@ export interface NodeTitleTouchItem {
     column: number;
     value: any;
     label?: string;
+    connectTo?: any[];
 }
 
 function touchAggregate(node: NodeTitle, items: NodeTitleTouchItem[]): void {
@@ -64,10 +66,12 @@ function touchAggregate(node: NodeTitle, items: NodeTitleTouchItem[]): void {
         let child = node.children.find(({ value }) => value === item.value);
 
         if (not(child)) {
-            child = new NodeTitle(item.column, item.value, item.label || "");
+            child = create(item);
 
             node.children.push(child);
         }
+
+        if (item.connectTo) child!.connectTo.push(item.connectTo);
 
         touchAggregate(child!, items);
     }
@@ -80,13 +84,19 @@ function touchAddition(node: NodeTitle, items: NodeTitleTouchItem[]): void {
         let child = node.children[node.children.length - 1];
 
         if (not(child) || child.value !== item.value) {
-            child = new NodeTitle(item.column, item.value, item.label || "");
+            child = create(item);
 
             node.children.push(child);
         }
 
+        if (item.connectTo) child!.connectTo.push(item.connectTo);
+
         touchAddition(child!, items);
     }
+}
+
+function create(source: NodeTitleTouchItem): NodeTitle {
+    return new NodeTitle(source.column, source.value, source.label || "");
 }
 
 function toExtended(
@@ -109,6 +119,7 @@ function toExtended(
             offset,
             span,
             children,
+            node.connectTo,
         );
 
         offset += span;

@@ -1,4 +1,5 @@
 import { not } from "logical-not";
+import { PivotTableSetup } from "../pivot-table-setup";
 
 import { Cell, PivotTableView } from "../pivot-table-view";
 import { NodeTitleExtended } from "./node-title-extended";
@@ -8,6 +9,7 @@ export function createPivotTableView(
     columns: NodeTitleExtended[],
     rows: NodeTitleExtended[],
     values: NodeValue[],
+    setup: PivotTableSetup,
 ): PivotTableView {
     const pivotTableRows: Cell[][] = [];
     const pivotTableColumns: Cell[][] = [];
@@ -22,37 +24,48 @@ export function createPivotTableView(
         push(pivotTableRows, offset, deep, new Cell(value, 1, span)),
     );
 
-    // console.log(rows);
+    const separator = setup.rows.length;
 
     values.forEach(({ path, value }) => {
-        path = path.slice();
-        console.log(path);
+        let row = 0;
+        let column = 0;
 
-        const rowNode = NodeTitleExtended.find(rows, (node): boolean => {
-            if (node.value === path[0]) {
-                path.shift();
+        const rowsPathArray = path.slice(0, separator);
+        const columnsPathArray = path.slice(separator);
 
-                return true;
-            }
+        if (rowsPathArray.length > 0) {
+            const rowNode = NodeTitleExtended.find(rows, (node): boolean => {
+                if (node.value === rowsPathArray[node.deep]) {
+                    if (node.deep === rowsPathArray.length - 1) {
+                        const isConnected =
+                            node.connectTo?.some((items: any[]) =>
+                                items.every(
+                                    (value, i) => columnsPathArray[i] === value,
+                                ),
+                            ) || false;
 
-            return false;
-        });
+                        return isConnected;
+                    }
 
-        const columnNode = NodeTitleExtended.find(columns, (node): boolean => {
-            if (node.value === path[0]) {
-                path.shift();
+                    return true;
+                }
 
-                return true;
-            }
+                return false;
+            });
 
-            return false;
-        });
+            if (rowNode) row = rowNode.offset;
+        }
 
-        if (rowNode && columnNode)
-            console.log(rowNode?.offset, columnNode?.offset);
+        if (columnsPathArray.length > 0) {
+            const columnNode = NodeTitleExtended.find(
+                columns,
+                node => node.value === columnsPathArray[node.deep],
+            );
 
-        if (rowNode && columnNode)
-            push(pivotTableValues, rowNode.offset, columnNode.offset, value);
+            if (columnNode) column = columnNode.offset;
+        }
+
+        push(pivotTableValues, row, column, value);
     });
 
     const length = columns.reduce(

@@ -19,10 +19,13 @@ export class NodeTitleExtended {
 
             const success = predicate(node);
 
-            if (success)
-                return node.children.length > 0
-                    ? NodeTitleExtended.find(node.children, predicate)
-                    : node;
+            if (success) {
+                if (node.children.length === 0) return node;
+
+                const child = NodeTitleExtended.find(node.children, predicate);
+
+                if (child) return child;
+            }
         }
 
         return null;
@@ -35,5 +38,6 @@ export class NodeTitleExtended {
         public readonly offset: number,
         public readonly span: number,
         public readonly children: NodeTitleExtended[],
+        public readonly connectTo: any[] | null,
     ) {}
 }

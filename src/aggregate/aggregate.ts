@@ -6,6 +6,7 @@ import { PivotTableView } from "../pivot-table-view";
 import { SortItem } from "../sort";
 import { Table } from "../table";
 import { createPivotTableView } from "./create-pivot-table-view";
+import { FiltersSetup } from "./filters-setup";
 import { NodeTitle, NodeTitleTouchType } from "./node-title";
 import { AttachGroups, NodeValue } from "./node-value";
 import { SortSetup } from "./sort-setup";
@@ -17,22 +18,23 @@ export function aggregate(
     sort: SortItem[],
 ): PivotTableView {
     const sortSetup = new SortSetup(sort, setup);
+    const createGroups = sortSetup.values.length > 0;
     const values = NodeValue.createNodeValues(
         table,
         setup,
-        filters,
-        sortSetup.values.length > 1,
+        new FiltersSetup(filters, setup),
+        createGroups,
     );
 
-    const [columns, rows] =
-        sortSetup.values.length > 0
-            ? createAndSortValues(values, setup, sortSetup)
-            : createAndSort(values, setup, sortSetup);
+    const [columns, rows] = createGroups
+        ? createAndSortValues(values, setup, sortSetup)
+        : createAndSort(values, setup, sortSetup);
 
     return createPivotTableView(
         NodeTitle.toExtended(columns),
         NodeTitle.toExtended(rows),
         values,
+        setup,
     );
 }
 
@@ -56,19 +58,43 @@ function createAndSortValues(
     setup: PivotTableSetup,
     sortSetup: SortSetup,
 ): [NodeTitle[], NodeTitle[]] {
-    sortSetup.rows.forEach(sortItem => {
-        const i = setup.rows.findIndex(column => sortItem.column);
+    if (values.groups) {
+        sortSetup.rows.forEach(({ column, sorter }) => {
+            const i = setup.rows.indexOf(column);
 
-        if (i === -1) return;
+            if (i !== -1)
+                values.groups!.sort((a, b) =>
+                    sorter.compare(a[0].path[i], b[0].path[i]),
+                );
+        });
 
-        values.sort((a, b) => sortItem.sorter.compare(a.path[i], b.path[i]));
-    });
+        sortSetup.values.forEach(({ column, sorter }) => {
+            const { key } = setup.values.find(item => item.index === column)!;
 
-    if (sortSetup.values.length === 1) {
-        const [{ sorter }] = sortSetup.values;
+            values.groups!.sort((a, b) => {
+                const itemA = a.find(
+                    item => item.path[item.path.length - 1] === key,
+                )!;
+                const itemB = b.find(
+                    item => item.path[item.path.length - 1] === key,
+                )!;
 
-        values.sort((a, b) => sorter.compare(a.value, b.value));
+                return sorter.compare(itemA.value, itemB.value);
+            });
+        });
+
+        NodeValue.ungroup(values);
     } else {
+        sortSetup.rows.forEach(({ column, sorter }) => {
+            const i = setup.rows.indexOf(column);
+
+            if (i !== -1)
+                values.sort((a, b) => sorter.compare(a.path[i], b.path[i]));
+        });
+
+        sortSetup.values.forEach(({ sorter }) => {
+            values.sort((a, b) => sorter.compare(a.value, b.value));
+        });
     }
 
     const [columns, rows] = create(values, setup, NodeTitleTouchType.Addition);
@@ -97,14 +123,19 @@ function create(
         columnsStart + setupColumns.length + (setup.values.length > 1 ? 1 : 0);
 
     values.forEach(({ path }) => {
+        const rowsPathArray = path.slice(rowsStart, rowsEnd);
+        const columnsPathArray = path.slice(columnsStart, columnsEnd);
+
         rows.touch(
-            path
-                .slice(rowsStart, rowsEnd)
-                .map((value, i) => ({ column: setupRows[i], value })),
+            rowsPathArray.map((value, i) => ({
+                column: setupRows[i],
+                value,
+                connectTo: columnsPathArray,
+            })),
             rowsTouchType,
         );
         columns.touch(
-            path.slice(columnsStart, columnsEnd).map((value, i) => ({
+            columnsPathArray.map((value, i) => ({
                 column: setupColumns[i] || setup.getColumnByKey(value),
                 value,
                 label:
