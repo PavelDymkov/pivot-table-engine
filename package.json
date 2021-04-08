@@ -21,7 +21,7 @@
     "scripts": {
         "build": "webpack --env production",
         "clean": "rimraf types/*",
-        "prepublishOnly": "npm run clean && npm run build && npm run test && npm patch version && git push",
+        "prepublishOnly": "npm run clean && npm run build && npm run test && npm version patch && git push",
         "start": "webpack -w",
         "test": "node test/index.spec.js"
     },
