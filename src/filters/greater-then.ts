@@ -1,11 +1,11 @@
 import { Filter } from "./filter";
 
-export class FilterEqual extends Filter {
+export class FilterGreaterThen extends Filter {
     constructor(private readonly value: any) {
         super();
     }
 
     check(value: any): boolean {
-        return value === this.value;
+        return value > this.value;
     }
 }

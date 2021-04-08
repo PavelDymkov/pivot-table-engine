@@ -1,5 +1,6 @@
 import { not } from "logical-not";
-import { AggregateFunctionFactory } from "./aggregate-function";
+
+import { AggregateFunctionFactory } from "./aggregate-functions";
 
 export class PivotTableSetup {
     private value: SetupInternal = {
@@ -69,6 +70,16 @@ export class PivotTableSetup {
         }
 
         return "";
+    }
+
+    getColumnByKey(key: symbol): number {
+        for (let i = 0, lim = this.values.length; i < lim; i++) {
+            const item = this.values[i];
+
+            if (item.key === key) return item.index;
+        }
+
+        return -1;
     }
 }
 

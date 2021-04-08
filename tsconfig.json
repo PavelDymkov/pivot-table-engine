@@ -2,7 +2,6 @@
     "include": ["./src/**/*.ts"],
 
     "compilerOptions": {
-        "baseUrl": "./",
         "declaration": true,
         "declarationDir": "./types",
         "moduleResolution": "Node",

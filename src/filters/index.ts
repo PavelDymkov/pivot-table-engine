@@ -1,10 +1,13 @@
 import { FilterEqual } from "./equal";
 import { Filter } from "./filter";
+import { FilterGreaterThen } from "./greater-then";
+
+export * from "./filter";
 
 export function equal(value: any): Filter {
-    const filter = new FilterEqual();
+    return new FilterEqual(value);
+}
 
-    filter.init(value);
-
-    return filter;
+export function greaterThen(value: any): Filter {
+    return new FilterGreaterThen(value);
 }

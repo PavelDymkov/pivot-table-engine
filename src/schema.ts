@@ -3,7 +3,6 @@ export abstract class Column {
 
     abstract parse(value: any): any;
     abstract toString(value: any): string;
-    abstract compare(a: any, b: any): -1 | 0 | 1;
 }
 
 class BaseType extends Column {
@@ -17,12 +16,6 @@ class BaseType extends Column {
 
     toString(value: any): string {
         return String(value);
-    }
-
-    compare(a: any, b: any): -1 | 0 | 1 {
-        if (a === b) return 0;
-
-        return a > b ? 1 : -1;
     }
 }
 

@@ -1,10 +1,10 @@
-import { AggregateFunctionFactory } from "./aggregate-function";
-import { Aggregator } from "./aggregator";
+import { aggregate } from "./aggregate";
 import { FilterItem } from "./filter";
 import { PivotTableSetup, Setup } from "./pivot-table-setup";
 import { SortItem } from "./sort";
 import { PivotTableView } from "./pivot-table-view";
 import { Table } from "./table";
+
 const filters = Symbol();
 const setup = Symbol();
 const sort = Symbol();
@@ -34,21 +34,8 @@ export class PivotTable {
         this[sort] = items;
     }
 
-    aggregate(
-        aggregateFunctions: Record<number, AggregateFunctionFactory> = {},
-    ): PivotTableView {
-        const aggregator = new Aggregator(
-            this[table],
-            this[setup],
-            aggregateFunctions,
-        );
-
-        aggregator.init();
-
-        if (this[filters].length > 0) aggregator.filter(this[filters]);
-        if (this[sort].length > 0) aggregator.sort(this[sort]);
-
-        return aggregator.aggregate();
+    aggregate(): PivotTableView {
+        return aggregate(this[table], this[setup], this[filters], this[sort]);
     }
 
     private constructor() {}

@@ -3,10 +3,10 @@ import { not } from "logical-not";
 import {
     AggregateFunction,
     AggregateFunctionFactory,
-} from "./aggregate-function";
+} from "./aggregate-functions";
 
-type Key = string | symbol;
-type Node = Map<Key, Node | AggregateFunction>;
+export type Key = string | symbol;
+export type Node = Map<Key, Node | AggregateFunction>;
 
 export class Tree {
     readonly root: Node = new Map();

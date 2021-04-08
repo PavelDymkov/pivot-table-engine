@@ -1,6 +1,10 @@
+import { FilterItem } from "./filter";
 import { Column } from "./schema";
+import { SortItem } from "./sort";
 
+const filters = Symbol();
 const schema = Symbol();
+const sort = Symbol();
 const value = Symbol();
 
 export class Table {
@@ -11,7 +15,9 @@ export class Table {
         });
     }
 
+    [filters]: FilterItem[] = [];
     [schema]: Column[];
+    [sort]: SortItem[] = [];
     [value]: any[][];
 
     get columns(): number {
@@ -28,6 +34,14 @@ export class Table {
 
             this[value].push(row);
         });
+    }
+
+    setFilters(items: FilterItem[]): void {
+        this[filters] = items;
+    }
+
+    setSort(items: SortItem[]): void {
+        this[sort] = items;
     }
 
     getRow(index: number): any[] {

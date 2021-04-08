@@ -5,5 +5,5 @@ export function filter(column: number, filter: Filter): FilterItem {
 }
 
 export class FilterItem {
-    constructor(public column: number, public item: Filter) {}
+    constructor(public column: number, public filter: Filter) {}
 }

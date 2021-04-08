@@ -1,12 +1,9 @@
-export function sort(column: number, order: SortOrder): SortItem {
-    return new SortItem(column, order);
+import { Sorter } from "./sorters";
+
+export function sort(column: number, sorter: Sorter): SortItem {
+    return new SortItem(column, sorter);
 }
 
 export class SortItem {
-    constructor(public column: number, public order: SortOrder) {}
-}
-
-export enum SortOrder {
-    AZ,
-    ZA,
+    constructor(public column: number, public sorter: Sorter) {}
 }
