@@ -1,5 +1,6 @@
 export * from "./aggregate-functions/index";
 export * from "./filters/index";
+export * from "./pivot-table-view";
 export * from "./pivot-table";
 export * from "./schema";
 export * from "./sorters/index";

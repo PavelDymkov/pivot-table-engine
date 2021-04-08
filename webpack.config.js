@@ -1,5 +1,3 @@
-const { join } = require("path");
-
 module.exports = env => ({
     mode: env.production ? "production" : "development",
 
@@ -20,5 +18,5 @@ module.exports = env => ({
         rules: [{ test: /\.ts$/, loader: "ts-loader" }],
     },
 
-    devtool: "inline-source-map",
+    devtool: env.production ? false : "inline-source-map",
 });

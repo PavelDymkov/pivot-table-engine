@@ -1,7 +1,7 @@
 {
     "name": "pivot-table-engine",
     "version": "0.7.0",
-    "description": "Pivot Table Engine (no UI)",
+    "description": "Pivot Table (no UI)",
     "license": "MIT",
     "author": {
         "name": "Pavel Dymkov",
@@ -19,11 +19,15 @@
     "main": "index.js",
     "types": "types",
     "scripts": {
+        "build": "webpack --env production",
+        "clean": "rimraf types/*",
+        "prepublishOnly": "npm run clean && npm run build && npm run test && npm patch version && git push",
         "start": "webpack -w",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "node test/index.spec.js"
     },
     "devDependencies": {
         "logical-not": "^1.0.7",
+        "rimraf": "^3.0.2",
         "ts-loader": "^8.1.0",
         "typescript": "^4.2.3",
         "webpack": "^5.28.0",
