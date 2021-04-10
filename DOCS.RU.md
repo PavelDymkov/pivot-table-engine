@@ -75,10 +75,34 @@ pivotTable.setFilters([
 pivotTable.setSort([sort(Column.City, za())]);
 ```
 
+Доступные фильтры:
+
+-   equal - ==
+-   greaterThenOrEqual или gte - >=
+-   greaterThen или gt - >
+-   lessThenOrEqual или lte - <=
+-   lessThen или lt - <
+-   not - !=
+
+Доступные типы сортировки:
+
+-   az - от меньшего к большему
+-   za - от больщего к меньшему
+
 Когда все готово, сводная таблица получается методом `aggregate`.
 
 ```ts
 import { PivotTableView } from "pivot-table-engine";
 
 const result: PivotTableView = pivotTable.aggregate();
+```
+
+В результате получается следующий объект:
+
+```
+╔═══════════════╤════════════════╗
+║ result.offset │ result.columns ║
+╟───────────────┼────────────────╢
+║ result.rows   │ result.values  ║
+╚═══════════════╧════════════════╝
 ```
