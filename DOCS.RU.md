@@ -106,3 +106,11 @@ const result: PivotTableView = pivotTable.aggregate();
 ║ result.rows   │ result.values  ║
 ╚═══════════════╧════════════════╝
 ```
+
+`values` представляет из себя массив массивов чисел или NaN для пустых ячеек, для которых
+нет пересечения строк и колонок. `columns` и `rows` - массив массивов объектов типа `Cell` с
+свойствами `label`, а также `colspan` и `rowspan`, и соответствует тегу `td`:
+
+```html
+<td colspan="cell.colspan" rowspan="cell.rowspan">cell.label</td>
+```
