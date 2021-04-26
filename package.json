@@ -8,7 +8,8 @@
         "email": "dymkov86@gmail.com"
     },
     "keywords": [
-        "pivot table"
+        "pivot",
+        "table"
     ],
     "files": [
         "*.js",
