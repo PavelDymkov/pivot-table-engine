@@ -1,8 +1,6 @@
-import { not } from "logical-not";
-
 import { FilterItem } from "../filter";
 import { PivotTableSetup } from "../pivot-table-setup";
-import { PivotTableView } from "../pivot-table-view";
+import { IS_ID, parseId, PivotTableView } from "../pivot-table-view";
 import { SortItem } from "../sort";
 import { Table } from "../table";
 import { createPivotTableView } from "./create-pivot-table-view";

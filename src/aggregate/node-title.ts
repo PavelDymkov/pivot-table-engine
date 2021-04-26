@@ -1,4 +1,5 @@
 import { not } from "logical-not";
+
 import { SortItem } from "../sort";
 import { NodeTitleExtended } from "./node-title-extended";
 
@@ -32,7 +33,7 @@ export class NodeTitle {
     }
 
     readonly children: NodeTitle[] = [];
-    public readonly connectTo: any[] = [];
+    readonly connectTo: any[] = [];
 
     constructor(
         public readonly column: number,

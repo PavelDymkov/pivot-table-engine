@@ -1,7 +1,7 @@
 import { not } from "logical-not";
-import { PivotTableSetup } from "../pivot-table-setup";
 
-import { Cell, PivotTableView } from "../pivot-table-view";
+import { PivotTableSetup } from "../pivot-table-setup";
+import { Cell, id, PivotTableView } from "../pivot-table-view";
 import { NodeTitleExtended } from "./node-title-extended";
 import { NodeValue } from "./node-value";
 
@@ -17,11 +17,21 @@ export function createPivotTableView(
 
     NodeTitleExtended.iterate(columns, ({ offset, deep, label, span }) => {
         if (label)
-            push(pivotTableColumns, deep, offset, new Cell(label, span, 1));
+            push(
+                pivotTableColumns,
+                deep,
+                offset,
+                new Cell(label, span, 1, id(offset, deep, true)),
+            );
     });
 
     NodeTitleExtended.iterate(rows, ({ offset, deep, value, span }) =>
-        push(pivotTableRows, offset, deep, new Cell(value, 1, span)),
+        push(
+            pivotTableRows,
+            offset,
+            deep,
+            new Cell(value, 1, span, id(offset, deep, false)),
+        ),
     );
 
     const separator = setup.rows.length;

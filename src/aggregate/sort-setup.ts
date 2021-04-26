@@ -1,4 +1,5 @@
 import { PivotTableSetup } from "../pivot-table-setup";
+import { IS_COLUMN, IS_ID } from "../pivot-table-view";
 import { SortItem } from "../sort";
 
 export class SortSetup {
@@ -15,6 +16,10 @@ export class SortSetup {
             const { column } = item;
 
             switch (true) {
+                case Boolean(column & IS_ID):
+                    if (column & IS_COLUMN) this.columns.push(item);
+                    else this.rows.push(item);
+                    break;
                 case setup.columns.includes(column):
                     this.columns.push(item);
                     break;
