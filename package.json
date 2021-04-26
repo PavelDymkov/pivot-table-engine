@@ -12,7 +12,7 @@
     ],
     "files": [
         "*.js",
-        "types/*.d.ts",
+        "types/**/*.d.ts",
         "!webpack.config.js",
         "!test/*"
     ],
