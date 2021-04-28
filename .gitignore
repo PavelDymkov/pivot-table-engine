@@ -2,4 +2,5 @@ node_modules/
 
 *.js
 !webpack.config.js
+!test/**/*.js
 *.d.ts

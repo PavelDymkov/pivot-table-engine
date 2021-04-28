@@ -1,5 +1,5 @@
 import { PivotTableSetup } from "../pivot-table-setup";
-import { IS_COLUMN, IS_ID } from "../pivot-table-view";
+import { CellOwnerType, decodeCellOwnerType } from "../pivot-table-view";
 import { SortItem } from "../sort";
 
 export class SortSetup {
@@ -13,12 +13,18 @@ export class SortSetup {
         this.values = [];
 
         sort.forEach(item => {
-            const { column } = item;
+            const { column, id } = item;
 
             switch (true) {
-                case Boolean(column & IS_ID):
-                    if (column & IS_COLUMN) this.columns.push(item);
-                    else this.rows.push(item);
+                case Boolean(id):
+                    switch (decodeCellOwnerType(id)) {
+                        case CellOwnerType.Column:
+                            this.columns.push(item);
+                            break;
+                        case CellOwnerType.Row:
+                            this.rows.push(item);
+                            break;
+                    }
                     break;
                 case setup.columns.includes(column):
                     this.columns.push(item);

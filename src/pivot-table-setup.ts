@@ -7,6 +7,8 @@ export class PivotTableSetup {
         columns: [],
         rows: [],
         values: [],
+        groupColumnsBy: [],
+        groupRowsBy: [],
         showValuesLabels: false,
     };
 
@@ -54,12 +56,32 @@ export class PivotTableSetup {
             }
         });
 
-        this.value = {
-            columns: (source.columns || []).filter(inRange).filter(uniq),
-            rows: (source.rows || []).filter(inRange).filter(uniq),
-            values,
-            showValuesLabels,
-        };
+        scope: {
+            const columns = (source.columns || []).filter(inRange).filter(uniq);
+            const groupColumnsBy = (source.groupColumnsBy || []).filter(n =>
+                columns.includes(n),
+            );
+
+            if (groupColumnsBy.length === 0 && columns.length > 0)
+                groupColumnsBy[0] = columns[0];
+
+            const rows = (source.rows || []).filter(inRange).filter(uniq);
+            const groupRowsBy = (source.groupRowsBy || []).filter(n =>
+                rows.includes(n),
+            );
+
+            if (groupRowsBy.length === 0 && rows.length > 0)
+                groupRowsBy[0] = rows[0];
+
+            this.value = {
+                columns,
+                rows,
+                values,
+                showValuesLabels,
+                groupColumnsBy,
+                groupRowsBy,
+            };
+        }
     }
 
     getValueLabel(key: symbol): string {
@@ -87,6 +109,8 @@ export interface Setup {
     columns: number[];
     rows: number[];
     values: Values[] | ValuesLabeled[];
+    groupColumnsBy: number[];
+    groupRowsBy: number[];
 }
 
 export interface Values {

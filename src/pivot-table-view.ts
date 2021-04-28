@@ -11,31 +11,32 @@ export class PivotTableView {
 }
 
 export class Cell {
+    readonly id: string;
+
     constructor(
         readonly label: string,
         readonly colspan: number,
         readonly rowspan: number,
-        readonly id: number,
-    ) {}
+
+        ownerType: CellOwnerType,
+        offset: number,
+        deep: number,
+    ) {
+        this.id = `#${ownerType}%${offset}%${deep}`;
+    }
 }
 
-export const IS_ID = 1 << 31;
-export const IS_COLUMN = 1 << 30;
-export const IS_ROW = 0 << 30;
+export type CellId = string;
 
-export function id(offset: number, deep: number, isColumn: boolean): number {
-    return deep | (offset << 8) | (isColumn ? IS_COLUMN : IS_ROW) | IS_ID;
+export enum CellOwnerType {
+    Column = "1",
+    Row = "2",
 }
 
-const offsetMask = Math.pow(2, 22) - 1;
-const deepMask = Math.pow(2, 8) - 1;
+export function decodeCellOwnerType(source: CellId): CellOwnerType {
+    return source.slice(1, 2) as CellOwnerType;
+}
 
-export function parseId(
-    source: number,
-): { offset: number; deep: number; isColumn: boolean } {
-    return {
-        offset: (source >>> 8) & offsetMask,
-        deep: source & deepMask,
-        isColumn: Boolean(source & IS_COLUMN),
-    };
+export function decodeCellId(source: CellId): [string, string] {
+    return source.split(/#|%/).slice(2) as [string, string];
 }

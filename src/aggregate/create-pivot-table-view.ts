@@ -1,7 +1,7 @@
 import { not } from "logical-not";
 
 import { PivotTableSetup } from "../pivot-table-setup";
-import { Cell, id, PivotTableView } from "../pivot-table-view";
+import { Cell, CellOwnerType, PivotTableView } from "../pivot-table-view";
 import { NodeTitleExtended } from "./node-title-extended";
 import { NodeValue } from "./node-value";
 
@@ -21,7 +21,7 @@ export function createPivotTableView(
                 pivotTableColumns,
                 deep,
                 offset,
-                new Cell(label, span, 1, id(offset, deep, true)),
+                new Cell(label, span, 1, CellOwnerType.Column, offset, deep),
             );
     });
 
@@ -30,7 +30,7 @@ export function createPivotTableView(
             pivotTableRows,
             offset,
             deep,
-            new Cell(value, 1, span, id(offset, deep, false)),
+            new Cell(value, 1, span, CellOwnerType.Row, offset, deep),
         ),
     );
 

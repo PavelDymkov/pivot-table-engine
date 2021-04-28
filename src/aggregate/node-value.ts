@@ -1,9 +1,10 @@
 import { not } from "logical-not";
+import { AggregateFunction } from "../aggregate-functions";
 
 import { Filter } from "../filters";
 import { PivotTableSetup } from "../pivot-table-setup";
 import { Table } from "../table";
-import { Key, Tree } from "../tree";
+import { Key, Node, Tree } from "../tree";
 import { FiltersSetup } from "./filters-setup";
 
 export interface AttachGroups {
@@ -19,20 +20,50 @@ export class NodeValue {
     ): NodeValue[] & AttachGroups {
         const tree = new Tree();
 
-        for (let row = 0, lim = table.rows; row < lim; row++) {
+        interface ValueFilter {
+            key: symbol;
+            path: string[];
+            filter: Filter;
+        }
+
+        const valueFilters: ValueFilter[] = [];
+
+        iterating: for (let row = 0, lim = table.rows; row < lim; row++) {
             tree.toRootNode();
 
-            setup.rows.forEach(column => {
-                const label = table.getLabel(column, row);
+            const path: string[] = [];
 
-                tree.toChild(label);
-            });
+            for (let i = 0, lim = setup.rows.length; i < lim; i++) {
+                const column = setup.rows[i];
+                const label = getLabel(table, column, row);
 
-            setup.columns.forEach(column => {
-                const label = table.getLabel(column, row);
+                if (not(label)) continue iterating;
 
-                tree.toChild(label);
-            });
+                const omit = filtersSetup.rows[column]?.some(({ filter }) =>
+                    not(filter.check(label)),
+                );
+
+                if (omit) continue iterating;
+
+                path.push(label);
+            }
+
+            for (let i = 0, lim = setup.columns.length; i < lim; i++) {
+                const column = setup.columns[i];
+                const label = getLabel(table, column, row);
+
+                if (not(label)) continue iterating;
+
+                const omit = filtersSetup.columns[column]?.some(({ filter }) =>
+                    not(filter.check(label)),
+                );
+
+                if (omit) continue iterating;
+
+                path.push(label);
+            }
+
+            path.forEach(label => tree.toChild(label));
 
             setup.values.forEach(({ key, index, aggregateFunction }) => {
                 tree.aggregate(
@@ -40,8 +71,47 @@ export class NodeValue {
                     table.getValue(index, row),
                     aggregateFunction,
                 );
+
+                filtersSetup.values.forEach(({ column, filter }) => {
+                    if (index === column)
+                        valueFilters.push({
+                            key,
+                            path,
+                            filter,
+                        });
+                });
             });
         }
+
+        valueFilters.forEach(({ key, path, filter }) => {
+            const deleteStack: [Node, Key][] = [];
+
+            let node = tree.root;
+
+            for (let i = 0, lim = path.length; i < lim; i++) {
+                const key = path[i];
+
+                deleteStack.unshift([node, key]);
+
+                if (node.has(key)) node = node.get(key)! as Node;
+                else return;
+            }
+
+            if (node.has(key)) {
+                const aggregateFunction = node.get(key)! as AggregateFunction;
+                const value = aggregateFunction.getSummeryValue();
+
+                if (not(filter.check(value))) {
+                    for (let i = 0, lim = deleteStack.length; i < lim; i++) {
+                        const [node, key] = deleteStack[i];
+
+                        node.delete(key);
+
+                        if (node.size > 0) break;
+                    }
+                }
+            }
+        });
 
         let values: NodeValue[] & AttachGroups = [];
         let path = [] as any[];
@@ -78,47 +148,7 @@ export class NodeValue {
 
         if (createGroups) values.groups = createAttachGroups(attachGroupsMap);
 
-        filtersSetup.columns.forEach(({ column, filter }) => {
-            const i = setup.rows.length + setup.columns.indexOf(column);
-
-            filterBy(i, filter);
-        });
-
-        filtersSetup.rows.forEach(({ column, filter }) => {
-            const i = setup.rows.indexOf(column);
-
-            filterBy(i, filter);
-        });
-
-        filtersSetup.values.forEach(({ column, filter }) => {
-            const { key } = setup.values.find(item => item.index === column)!;
-
-            if (createGroups) {
-                values.groups = values.groups!.filter(group => {
-                    const item = group.find(
-                        item => item.path[item.path.length - 1] === key,
-                    )!;
-
-                    return filter.check(item.value);
-                });
-            } else {
-                values = values.filter(item => {
-                    const last = item.path[item.path.length - 1];
-
-                    return last === key ? filter.check(item.value) : true;
-                });
-            }
-        });
-
         return values;
-
-        function filterBy(i: number, filter: Filter): void {
-            if (createGroups)
-                values.groups = values.groups!.filter(group =>
-                    filter.check(group[0].path[i]),
-                );
-            else values = values.filter(item => filter.check(item.path[i]));
-        }
     }
 
     static ungroup(
@@ -136,6 +166,10 @@ export class NodeValue {
     }
 
     constructor(public readonly path: any[], public readonly value: any) {}
+}
+
+function getLabel(table: Table, column: number, row: number): any {
+    return table.getSchema(column).toString(table.getValue(column, row));
 }
 
 const keysProperty = Symbol();
