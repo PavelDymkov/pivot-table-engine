@@ -6,48 +6,82 @@ import {
 } from "../aggregate-functions";
 
 export type Key = string | symbol;
-export type Node = Map<Key, Node | AggregateFunction>;
+export type Node = Map<Key, Node | Leaf>;
+
+export class Leaf {
+    private summeryValue: any = null;
+
+    get value(): any {
+        if (this.summeryValue === null)
+            this.summeryValue = this.aggregateFunction.getSummeryValue();
+
+        return this.summeryValue;
+    }
+
+    constructor(public readonly aggregateFunction: AggregateFunction) {}
+}
 
 export class Tree {
     readonly root: Node = new Map();
 
-    private current: Node = this.root;
-
-    toRootNode(): void {
-        this.current = this.root;
-    }
-
-    toChild(key: Key): void {
-        this.touch(key);
-
-        this.current = this.current.get(key) as Node;
-    }
-
-    touch(key: Key): void {
-        if (not(this.current.has(key))) this.current.set(key, new Map());
-    }
-
-    aggregate(
-        key: Key,
+    addValue(
+        path: string[],
+        key: symbol,
         value: any,
         aggregateFunctionFactory: AggregateFunctionFactory,
     ): void {
-        let aggregateFunction: AggregateFunction;
+        const node: Node = path.reduce((node, item) => {
+            if (not(node.has(item))) node.set(item, new Map());
 
-        if (this.current.has(key)) {
-            aggregateFunction = this.current.get(key) as AggregateFunction;
-        } else {
-            aggregateFunction = aggregateFunctionFactory();
+            return node.get(item)! as Node;
+        }, this.root);
 
-            this.current.set(key, aggregateFunction);
+        if (not(node.has(key)))
+            node.set(key, new Leaf(aggregateFunctionFactory()));
+
+        const leaf = node.get(key)! as Leaf;
+
+        leaf.aggregateFunction.next(value);
+    }
+
+    getValue(path: string[], key: symbol): any {
+        let node = this.root;
+
+        for (let i = 0, lim = path.length; i < lim; i++) {
+            const item = path[i];
+
+            node = node.get(item)! as Node;
+
+            if (not(node instanceof Map)) return null;
         }
 
-        aggregateFunction.next(value);
+        const leaf = node.get(key)! as Leaf;
+
+        return leaf instanceof Leaf ? leaf.value : null;
+    }
+
+    remove(path: string[]): void {
+        remove(this.root, path);
     }
 
     iterate(callbackLabel: CallbackKey, callbackValue: CallbackValue): void {
         iterateTree(this.root, callbackLabel, callbackValue, 0);
     }
+}
+
+function remove(node: Node, path: string[]): boolean {
+    if (path.length === 0) return true;
+
+    const [item, ...rest] = path;
+    const child = node.get(item);
+
+    if (child instanceof Map && remove(child, rest)) {
+        node.delete(item);
+
+        return node.size === 0;
+    }
+
+    return false;
 }
 
 type CallbackKey = (key: Key, level: number) => void;
@@ -59,12 +93,10 @@ function iterateTree(
     callbackValue: (value: any) => void,
     level: number,
 ): void {
-    map.forEach((value, key) => {
+    map.forEach((node, key) => {
         callbackKey(key, level);
 
-        if (value instanceof AggregateFunction)
-            callbackValue(value.getSummeryValue());
-        else if (value instanceof Map && value.size > 0)
-            iterateTree(value, callbackKey, callbackValue, level + 1);
+        if (node instanceof Leaf) callbackValue(node.value);
+        else iterateTree(node, callbackKey, callbackValue, level + 1);
     });
 }

@@ -1,8 +1,8 @@
 export class PivotTableView {
     constructor(
-        readonly columns: Cell[][],
-        readonly rows: Cell[][],
-        readonly values: any[][],
+        readonly columns: (Cell | null)[][],
+        readonly rows: (Cell | null)[][],
+        readonly values: number[][],
         readonly offset: {
             readonly colspan: number;
             readonly rowspan: number;
@@ -39,4 +39,16 @@ export function decodeCellOwnerType(source: CellId): CellOwnerType {
 
 export function decodeCellId(source: CellId): [string, string] {
     return source.split(/#|%/).slice(2) as [string, string];
+}
+
+export class CellSource {
+    colspan = 1;
+    rowspan = 1;
+
+    constructor(
+        public readonly label: string,
+        public readonly ownerType: CellOwnerType,
+        public readonly offset: number,
+        public readonly deep: number,
+    ) {}
 }
