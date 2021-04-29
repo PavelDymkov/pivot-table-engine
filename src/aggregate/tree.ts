@@ -3,7 +3,7 @@ import { not } from "logical-not";
 import {
     AggregateFunction,
     AggregateFunctionFactory,
-} from "./aggregate-functions";
+} from "../aggregate-functions";
 
 export type Key = string | symbol;
 export type Node = Map<Key, Node | AggregateFunction>;

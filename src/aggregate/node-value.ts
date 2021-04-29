@@ -4,7 +4,7 @@ import { AggregateFunction } from "../aggregate-functions";
 import { Filter } from "../filters";
 import { PivotTableSetup } from "../pivot-table-setup";
 import { Table } from "../table";
-import { Key, Node, Tree } from "../tree";
+import { Key, Node, Tree } from "./tree";
 import { FiltersSetup } from "./filters-setup";
 
 export interface AttachGroups {
