@@ -1,25 +1,17 @@
-export abstract class Column {
-    abstract get defaultValue(): any;
+import { defaultFormatter, Formatter } from "./formatter";
 
-    abstract parse(value: any): any;
-    abstract toString(value: any): string;
+export abstract class Column<Value> {
+    abstract get defaultFormatter(): Formatter;
+    abstract get defaultValue(): Value;
+
+    abstract parse(value: any): Value;
 }
 
-class BaseType extends Column {
-    get defaultValue(): any {
-        return null;
+class StringType extends Column<string> {
+    get defaultFormatter(): Formatter {
+        return defaultFormatter;
     }
 
-    parse(value: any): any {
-        return value;
-    }
-
-    toString(value: any): string {
-        return String(value);
-    }
-}
-
-class StringType extends BaseType {
     get defaultValue(): string {
         return "";
     }
@@ -28,7 +20,12 @@ class StringType extends BaseType {
         return value ? String(value) : this.defaultValue;
     }
 }
-class NumberType extends BaseType {
+
+class NumberType extends Column<number> {
+    get defaultFormatter(): Formatter {
+        return defaultFormatter;
+    }
+
     get defaultValue(): number {
         return 0;
     }
@@ -38,7 +35,7 @@ class NumberType extends BaseType {
     }
 }
 
-export const Schema: Record<"String" | "Number", Column> = {
-    String: new StringType(),
-    Number: new NumberType(),
-};
+export const Schema = {
+    String: new StringType() as Column<string>,
+    Number: new NumberType() as Column<number>,
+} as const;

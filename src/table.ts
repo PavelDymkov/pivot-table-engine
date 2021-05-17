@@ -1,22 +1,26 @@
 import { FilterItem } from "./filter";
+import { defaultFormatter, Formatter } from "./formatter";
 import { Column } from "./schema";
 import { SortItem } from "./sort";
 
 const filters = Symbol();
+const formatters = Symbol();
 const schema = Symbol();
 const sort = Symbol();
 const source = Symbol();
 const table = Symbol();
 
 export class Table {
-    static create(source: Column[]): Table {
+    static create(source: Column<any>[]): Table {
         return Object.assign(new Table(), {
+            [formatters]: Array(source.length).fill(String),
             [schema]: source,
         });
     }
 
     [filters]: FilterItem[] = [];
-    [schema]: Column[];
+    [formatters]: Formatter[] = [];
+    [schema]: Column<any>[];
     [sort]: SortItem[] = [];
     [source]: any[][] = [];
     [table]: any[][] = [];
@@ -39,6 +43,14 @@ export class Table {
         this[sort] = items.filter(inSchema, this);
 
         if (this[source].length > 0) reset.call(this);
+    }
+
+    setFormatters(items: Formatter[]): void {
+        const target = this[formatters];
+
+        items
+            .slice(0, this[schema].length)
+            .forEach((item, i) => (target[i] = item));
     }
 
     addRows(rows: any[][]): void {
@@ -89,8 +101,12 @@ export class Table {
         return this.getRow(row)[column];
     }
 
-    getSchema(column: number): Column {
+    getSchema(column: number): Column<any> {
         return this[schema][column];
+    }
+
+    getFormatter(column: number): Formatter {
+        return this[formatters][column] || defaultFormatter;
     }
 
     private constructor() {}

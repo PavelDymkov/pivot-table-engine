@@ -1,8 +1,8 @@
-import { aggregate } from "./aggregate";
+import { Cell } from "./cell";
 import { FilterItem } from "./filter";
-import { PivotTableSetup, Setup } from "./pivot-table-setup";
+import { PivotTableTree } from "./pivot-table-tree";
+import { PivotTableSetup, Setup } from "./setup";
 import { SortItem } from "./sort";
-import { PivotTableView } from "./pivot-table-view";
 import { Table } from "./table";
 
 const filters = Symbol();
@@ -34,8 +34,23 @@ export class PivotTable {
         this[sort] = items;
     }
 
-    aggregate(): PivotTableView {
-        return aggregate(this[table], this[setup], this[filters], this[sort]);
+    // collapse(cell: Cell): void {}
+
+    // expand(cell: Cell): void {}
+
+    // drillDown(cell: Cell): Table {
+    //     return Table.create([]);
+    // }
+
+    aggregate(): Cell[][] {
+        const pivotTableTree = new PivotTableTree(
+            this[setup],
+            this[table],
+            this[filters],
+            this[sort],
+        );
+
+        return pivotTableTree.toCellTable();
     }
 
     private constructor() {}
