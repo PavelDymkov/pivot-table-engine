@@ -4,12 +4,18 @@ import { Tree } from "./tree";
 export interface PivotTableView {
     readonly columns: string[][];
     readonly rows: string[][];
-    readonly values: string[][];
+    readonly values: ValueView[][];
 
     readonly offset: {
         readonly columns: number;
         readonly rows: number;
     };
+}
+
+export interface ValueView {
+    content: string;
+    column: number;
+    columnsPath: string[];
 }
 
 export function createPivotTableView(
@@ -59,21 +65,80 @@ export function createPivotTableView(
                     rowAccumulator.addLabels();
                 }
 
-                valuesForGroup.forEach(i => (valuesRow[i + i0] = groups[i]));
+                valuesForGroup.forEach(
+                    i =>
+                        (valuesRow[i + i0] = {
+                            content: groups[i],
+                            column: setup.values[i].column,
+                            columnsPath: column.labels,
+                        }),
+                );
                 valuesForAggregate.forEach(
                     i =>
-                        (valuesRow[i + i0] = stringify[i](
-                            aggregators[i].getSummeryValue(),
-                        )),
+                        (valuesRow[i + i0] = {
+                            content: stringify[i](
+                                aggregators[i].getSummeryValue(),
+                            ),
+                            column: setup.values[i].column,
+                            columnsPath: column.labels,
+                        }),
                 );
             });
         });
     });
 
-    rowsAccumulatorsMap.forEach(rowAccumulator => {
-        rows.push(...rowAccumulator.labels);
-        values.push(...rowAccumulator.values);
-    });
+    if (pivotTableTree.cellSorter) {
+        const rowAccumulators: RowAccumulator[] = [];
+
+        rowsAccumulatorsMap.forEach(rowAccumulator => {
+            rowAccumulators.push(rowAccumulator);
+        });
+
+        const { path, sorter } = pivotTableTree.cellSorter;
+
+        rowAccumulators.sort((a, b) => {
+            let aValue = -Infinity;
+            let bValue = -Infinity;
+
+            a.values.some(item =>
+                item.some(({ column, columnsPath, content }) => {
+                    if (
+                        column === path.value &&
+                        coincide(columnsPath, path.columns)
+                    ) {
+                        aValue = parseFloat(content);
+
+                        return true;
+                    }
+                }),
+            );
+
+            b.values.some(item =>
+                item.some(({ column, columnsPath, content }) => {
+                    if (
+                        column === path.value &&
+                        coincide(columnsPath, path.columns)
+                    ) {
+                        bValue = parseFloat(content);
+
+                        return true;
+                    }
+                }),
+            );
+
+            return sorter.compare(aValue, bValue);
+        });
+
+        group(rowAccumulators).forEach(rowAccumulator => {
+            rows.push(...rowAccumulator.labels);
+            values.push(...rowAccumulator.values);
+        });
+    } else {
+        rowsAccumulatorsMap.forEach(rowAccumulator => {
+            rows.push(...rowAccumulator.labels);
+            values.push(...rowAccumulator.values);
+        });
+    }
 
     return {
         columns,
@@ -89,11 +154,45 @@ export function createPivotTableView(
     };
 }
 
+function coincide(a: string[], b: string[]): boolean {
+    for (let i = 0, lim = Math.min(a.length, b.length); i < lim; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+
+    return true;
+}
+
+function group(source: RowAccumulator[]): RowAccumulator[] {
+    const output: RowAccumulator[] = [];
+
+    source = source.slice();
+
+    for (let item = source.shift(); item; item = source.shift()) {
+        output.push(item);
+
+        const labels = item.labelsSource.slice(0, -1);
+
+        while (labels.length) {
+            for (let j = 0; j < source.length; j++) {
+                if (coincide(labels, source[j].labelsSource)) {
+                    output.push(source[j]);
+
+                    source.splice(j, 1);
+                }
+            }
+
+            labels.pop();
+        }
+    }
+
+    return output;
+}
+
 class RowAccumulator {
     readonly labels: string[][] = [this.labelsSource];
-    readonly values: string[][] = [[]];
+    readonly values: ValueView[][] = [[]];
 
-    get lastValuesItem(): string[] {
+    get lastValuesItem(): ValueView[] {
         return this.values[this.values.length - 1];
     }
 

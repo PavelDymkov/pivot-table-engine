@@ -12,10 +12,6 @@ export class Tree<T> {
         iterateTree(this.root, callback, 0, this.sort);
     }
 
-    // iterate(callbackKey: CallbackKey, callbackValue: CallbackValue<T>): void {
-    //     iterateTree(this.root, callbackKey, callbackValue, 0, this.sort);
-    // }
-
     touchLeaf(path: string[], create: () => T): T {
         let node = this.root;
 
@@ -86,52 +82,12 @@ function iterateTree(
         });
     }
 
-    entries.forEach(([key, childNode]) => {
+    entries.forEach(([, childNode]) => {
         if (childNode.leaf) callbackValue(childNode.leaf.value);
 
         iterateTree(childNode, callbackValue, level + 1, sort);
     });
 }
-
-/*
-type CallbackKey = (key: string, level: number) => void;
-type CallbackValue<T> = (value: T) => void;
-
-function iterateTree(
-    node: Node,
-    callbackKey: (key: string, level: number) => void,
-    callbackValue: (value: any) => void,
-    level: number,
-    sort: Sorter[][],
-): void {
-    const entries = node.entries;
-
-    if (level in sort) {
-        const sorters = sort[level];
-
-        entries.sort(([a], [b]) => {
-            for (let i = 0, lim = sorters.length; i < lim; i++) {
-                const sorter = sorters[i];
-                const compare = sorter.compare(a, b);
-
-                if (compare === 0) continue;
-
-                return compare;
-            }
-
-            return 0;
-        });
-    }
-
-    entries.forEach(([key, childNode]) => {
-        callbackKey(key, level);
-
-        if (childNode.leaf) callbackValue(childNode.leaf.value);
-
-        iterateTree(childNode, callbackKey, callbackValue, level + 1, sort);
-    });
-}
-*/
 
 export class Node {
     leaf: Leaf<any> | null = null;

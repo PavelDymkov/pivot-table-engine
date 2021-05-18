@@ -7,8 +7,8 @@ import { PivotTableSetup, ValueSetupType } from "../setup";
 import { SortItem } from "../sort";
 import { Table } from "../table";
 import { FiltersSetup } from "./filters-setup";
-import { SortSetup } from "./sort-setup";
-import { toCells } from "./to-cells";
+import { CellSorter, SortSetup } from "./sort-setup";
+import { CellPath, toCells } from "./to-cells";
 import { Tree } from "./tree";
 
 const UNDEFINED = void 0;
@@ -16,6 +16,10 @@ const UNDEFINED = void 0;
 export class PivotTableTree {
     readonly rows: Tree<Row>;
     readonly columns: Tree<Column>;
+
+    readonly cellMap = new Map<Cell, CellPath>();
+
+    cellSorter: CellSorter | null = null;
 
     constructor(
         public readonly setup: PivotTableSetup,
@@ -26,6 +30,9 @@ export class PivotTableTree {
         const rowsTree = new Tree<Row>();
         const columnsTree = new Tree<Column>();
 
+        this.rows = rowsTree;
+        this.columns = columnsTree;
+
         const filtersSetup = new FiltersSetup(filters, setup);
         const values: {
             item: Value;
@@ -33,10 +40,8 @@ export class PivotTableTree {
             rowPath: string[];
             path: string[];
         }[] = [];
-        const sortSetup = new SortSetup(sort, setup);
 
-        rowsTree.sort = sortSetup.rows;
-        columnsTree.sort = sortSetup.columns;
+        this.changeSort(sort);
 
         iterating: for (let row = 0, lim = table.rows; row < lim; row++) {
             const rowPath: string[] = [];
@@ -165,9 +170,18 @@ export class PivotTableTree {
                 }
             });
         });
+    }
 
-        this.rows = rowsTree;
-        this.columns = columnsTree;
+    changeSort(items: SortItem[]): void {
+        const sortSetup = new SortSetup(items, this);
+
+        this.rows.sort = sortSetup.rows;
+        this.columns.sort = sortSetup.columns;
+
+        this.cellSorter =
+            sortSetup.cellSorter.find(
+                ({ path }) => path.rows.length === 0 && path.value !== -1,
+            ) || null;
     }
 
     toCellTable(): Cell[][] {

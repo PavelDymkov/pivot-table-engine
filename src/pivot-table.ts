@@ -1,3 +1,5 @@
+import { not } from "logical-not";
+
 import { Cell } from "./cell";
 import { FilterItem } from "./filter";
 import { PivotTableTree } from "./pivot-table-tree";
@@ -5,6 +7,7 @@ import { PivotTableSetup, Setup } from "./setup";
 import { SortItem } from "./sort";
 import { Table } from "./table";
 
+const cache = Symbol();
 const filters = Symbol();
 const setup = Symbol();
 const sort = Symbol();
@@ -17,6 +20,7 @@ export class PivotTable {
         });
     }
 
+    [cache]: PivotTableTree | null = null;
     [filters]: FilterItem[] = [];
     [setup] = new PivotTableSetup();
     [sort]: SortItem[] = [];
@@ -24,14 +28,18 @@ export class PivotTable {
 
     setup(source: Partial<Setup>): void {
         this[setup].update(source, this[table].columns);
+        this[cache] = null;
     }
 
     setFilters(items: FilterItem[]): void {
         this[filters] = items;
+        this[cache] = null;
     }
 
     setSort(items: SortItem[]): void {
         this[sort] = items;
+
+        this[cache]?.changeSort(items);
     }
 
     // collapse(cell: Cell): void {}
@@ -43,14 +51,15 @@ export class PivotTable {
     // }
 
     aggregate(): Cell[][] {
-        const pivotTableTree = new PivotTableTree(
-            this[setup],
-            this[table],
-            this[filters],
-            this[sort],
-        );
+        if (not(this[cache]))
+            this[cache] = new PivotTableTree(
+                this[setup],
+                this[table],
+                this[filters],
+                this[sort],
+            );
 
-        return pivotTableTree.toCellTable();
+        return this[cache]!.toCellTable();
     }
 
     private constructor() {}

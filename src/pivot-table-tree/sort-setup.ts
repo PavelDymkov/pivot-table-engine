@@ -1,8 +1,9 @@
 import { not } from "logical-not";
 
-import { PivotTableSetup } from "../setup";
 import { SortItem } from "../sort";
 import { Sorter } from "../sorters";
+import { PivotTableTree } from "./pivot-table-tree";
+import { CellPath } from "./to-cells";
 
 export class SortSetup {
     readonly columns: Sorter[][];
@@ -10,10 +11,15 @@ export class SortSetup {
 
     readonly values: SortItem[];
 
-    constructor(sort: SortItem[], setup: PivotTableSetup) {
+    readonly cellSorter: CellSorter[];
+
+    constructor(sort: SortItem[], pivotTableTree: PivotTableTree) {
+        const { setup, cellMap } = pivotTableTree;
+
         this.columns = [];
         this.rows = [];
         this.values = [];
+        this.cellSorter = [];
 
         setup.columns.forEach((column, i) => {
             sort.forEach(item => {
@@ -35,30 +41,26 @@ export class SortSetup {
             });
         });
 
-        // sort.forEach(item => {
-        //     const { column, id } = item;
+        setup.values.forEach(valueSetup => {
+            sort.forEach(item => {
+                if (item.column === valueSetup.column) this.values.push(item);
+            });
+        });
 
-        //     switch (true) {
-        //         case Boolean(id):
-        //             switch (decodeCellOwnerType(id)) {
-        //                 case CellOwnerType.Column:
-        //                     this.columns.push(item);
-        //                     break;
-        //                 case CellOwnerType.Row:
-        //                     this.rows.push(item);
-        //                     break;
-        //             }
-        //             break;
-        //         case setup.columns.includes(column):
-        //             this.columns.push(item);
-        //             break;
-        //         case setup.rows.includes(column):
-        //             this.rows.push(item);
-        //             break;
-        //         case !!setup.values.find(({ index }) => index === column):
-        //             this.values.push(item);
-        //             break;
-        //     }
-        // });
+        sort.forEach(({ cell, sorter }) => {
+            if (cell) {
+                const path = cellMap.get(cell)!;
+
+                this.cellSorter.push({
+                    path,
+                    sorter,
+                });
+            }
+        });
     }
+}
+
+export interface CellSorter {
+    path: CellPath;
+    sorter: Sorter;
 }
