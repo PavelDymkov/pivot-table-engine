@@ -55,8 +55,8 @@ export interface Setup {
     columns: number[];
     rows: number[];
     values: Value[] | ValueLabeled[];
-    columnsAdvancedSetup: Partial<AdvancedSetup>;
-    rowsAdvancedSetup: Partial<AdvancedSetup>;
+    // columnsAdvancedSetup: Partial<AdvancedSetup>;
+    // rowsAdvancedSetup: Partial<AdvancedSetup>;
 }
 
 export interface AdvancedSetup {
@@ -120,7 +120,9 @@ export class ValueSetup {
         switch (this.type) {
             case ValueSetupType.ValueAggregate:
                 this.column = (source as ValueAggregate).column;
-                this.aggregateFunction = (source as ValueAggregate).aggregateFunction;
+                this.aggregateFunction = (
+                    source as ValueAggregate
+                ).aggregateFunction;
                 break;
             case ValueSetupType.ValueGroup:
                 this.column = (source as ValueGroup).column;
@@ -128,7 +130,9 @@ export class ValueSetup {
                 break;
             case ValueSetupType.Aggregate:
                 this.column = -1;
-                this.aggregateFunction = (source as Aggregate).aggregateFunction;
+                this.aggregateFunction = (
+                    source as Aggregate
+                ).aggregateFunction;
                 break;
         }
 
