@@ -1,6 +1,6 @@
 {
     "name": "pivot-table-engine",
-    "version": "0.7.6",
+    "version": "0.7.7",
     "description": "Pivot Table with filtering and sorting (no UI)",
     "license": "MIT",
     "author": {
