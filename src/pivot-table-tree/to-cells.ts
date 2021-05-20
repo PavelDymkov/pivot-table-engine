@@ -18,7 +18,7 @@ export function toCells(pivotTableTree: PivotTableTree): Cell[][] {
 
         for (let i = 0, lim = setup.columns.length; i < lim; i++) rows.push([]);
 
-        const valuesLabelsRow: CellSource[] = Array(offsetColumns);
+        const valuesLabelsRow: CellSource[] = Array(offsetRows);
 
         if (setup.showValuesLabels) rows.push(valuesLabelsRow);
 
@@ -26,7 +26,7 @@ export function toCells(pivotTableTree: PivotTableTree): Cell[][] {
             item.forEach((label, columnIndex) => {
                 if (serviceRow[columnIndex]?.label !== label) {
                     serviceRow[columnIndex] = rows[columnIndex][
-                        rowIndex * valuesQuantity + offsetColumns
+                        rowIndex * valuesQuantity + offsetRows
                     ] = CellSource.createHeaderCell(
                         label,
                         valuesQuantity,
@@ -43,14 +43,13 @@ export function toCells(pivotTableTree: PivotTableTree): Cell[][] {
             });
 
             setup.values.forEach(({ label, column }, i) => {
-                valuesLabelsRow[
-                    rowIndex * valuesQuantity + offsetColumns + i
-                ] = CellSource.createHeaderCell(
-                    label,
-                    1,
-                    1,
-                    new CellPath(item, CellPath.emptyRows, column),
-                );
+                valuesLabelsRow[rowIndex * valuesQuantity + offsetRows + i] =
+                    CellSource.createHeaderCell(
+                        label,
+                        1,
+                        1,
+                        new CellPath(item, CellPath.emptyRows, column),
+                    );
             });
         });
     } else if (setup.showValuesLabels) {
@@ -94,18 +93,17 @@ export function toCells(pivotTableTree: PivotTableTree): Cell[][] {
 
             rowItem.forEach((label, columnIndex) => {
                 if (serviceRow[columnIndex]?.label !== label) {
-                    row[columnIndex] = serviceRow[
-                        columnIndex
-                    ] = CellSource.createHeaderCell(
-                        label,
-                        1,
-                        1,
-                        new CellPath(
-                            CellPath.emptyColumns,
-                            rowItem.slice(0, columnIndex + 1),
-                            -1,
-                        ),
-                    );
+                    row[columnIndex] = serviceRow[columnIndex] =
+                        CellSource.createHeaderCell(
+                            label,
+                            1,
+                            1,
+                            new CellPath(
+                                CellPath.emptyColumns,
+                                rowItem.slice(0, columnIndex + 1),
+                                -1,
+                            ),
+                        );
 
                     serviceRow.length = columnIndex + 1;
                 } else serviceRow[columnIndex].rowspan += 1;
