@@ -49,12 +49,13 @@ export class SortSetup {
 
         sort.forEach(({ cell, sorter }) => {
             if (cell) {
-                const path = cellMap.get(cell)!;
+                const path = cellMap.get(cell);
 
-                this.cellSorter.push({
-                    path,
-                    sorter,
-                });
+                if (path)
+                    this.cellSorter.push({
+                        path,
+                        sorter,
+                    });
             }
         });
     }

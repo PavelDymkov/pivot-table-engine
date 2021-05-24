@@ -97,9 +97,9 @@ export class PivotTableTree {
 
                 if (not(label)) continue iterating;
 
-                const omit = filtersSetup.valuesGroup[
-                    column
-                ]?.some(({ filter }) => not(filter.check(label)));
+                const omit = filtersSetup.valuesGroup[column]?.some(
+                    ({ filter }) => not(filter.check(label)),
+                );
 
                 if (omit) continue iterating;
 
