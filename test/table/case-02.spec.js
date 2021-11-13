@@ -1,4 +1,4 @@
-const { Table, filter, equal } = require("../../");
+const { Table, filter, equal } = require("../../package/index");
 const { assertTable: assert } = require("../tools");
 const { rows1, schema1 } = require("./data/1");
 

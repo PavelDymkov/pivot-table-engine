@@ -1,4 +1,4 @@
-const { Table, sort, az } = require("../../");
+const { Table, sort, az } = require("../../package/index");
 const { assertTable: assert } = require("../tools");
 const { rows1, schema1 } = require("./data/1");
 

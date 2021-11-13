@@ -1,4 +1,4 @@
-const { Schema } = require("../../../");
+const { Schema } = require("../../../package/index");
 
 exports.schema2 = [Schema.String, Schema.Number, Schema.String];
 
