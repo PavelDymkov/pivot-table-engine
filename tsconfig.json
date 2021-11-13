@@ -1,11 +1,11 @@
 {
-    "include": ["./src/**/*.ts"],
-
     "compilerOptions": {
         "declaration": true,
-        "declarationDir": "./types",
+        "declarationDir": "package",
         "moduleResolution": "Node",
         "strict": true,
         "target": "ES2015"
-    }
+    },
+
+    "include": ["src/**/*.ts"]
 }

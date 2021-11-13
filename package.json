@@ -1,12 +1,12 @@
 {
     "name": "pivot-table-engine",
-    "version": "0.7.8",
+    "version": "1.0.0",
     "description": "Pivot Table with filtering and sorting (no UI)",
-    "license": "MIT",
     "author": {
         "name": "Pavel Dymkov",
         "email": "dymkov86@gmail.com"
     },
+    "license": "ISC",
     "keywords": [
         "pivot table",
         "pivot",
@@ -14,25 +14,19 @@
         "sort",
         "filter"
     ],
-    "files": [
-        "*.js",
-        "types/**/*.d.ts",
-        "!webpack.config.js",
-        "!test/*"
-    ],
-    "main": "index.js",
-    "types": "types",
     "scripts": {
-        "build": "webpack --env production",
-        "clean": "rimraf types/*",
-        "prepublishOnly": "npm run clean && npm run build && npm run test && npm version patch && git push",
-        "start": "webpack -w",
-        "test": "mocha --config=\"test/.mocharc.json\" test/**/*.spec.js"
+        "build": "packagr",
+        "prepublishOnly": "exit 1",
+        "start": "packagr --dev",
+        "test": "mocha --config test/.mocharc.json test/**/*.spec.js"
     },
     "devDependencies": {
+        "@types/node": "^16.11.7",
+        "@types/shelljs": "^0.8.9",
         "logical-not": "^1.0.7",
         "mocha": "^8.3.2",
-        "rimraf": "^3.0.2",
+        "npm-packagr": "^1.0.4",
+        "shelljs": "^0.8.4",
         "ts-loader": "^8.1.0",
         "typescript": "^4.2.3",
         "webpack": "^5.28.0",

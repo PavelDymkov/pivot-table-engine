@@ -56,8 +56,8 @@ pivotTable.setup({
     columns: [Column.City, Column.Smoker],
     rows: [Column.Name, Column.Gadget],
     values: [
-        { index: Column.Height, aggregateFunction: sum, label: "Height" },
-        { index: Column.Weight, aggregateFunction: sum, label: "Weight" },
+        { column: Column.Height, aggregateFunction: sum, label: "Height" },
+        { column: Column.Weight, aggregateFunction: sum, label: "Weight" },
     ],
 });
 ```
@@ -77,40 +77,24 @@ pivotTable.setSort([sort(Column.City, za())]);
 
 Доступные фильтры:
 
--   equal - ==
--   greaterThenOrEqual или gte - >=
--   greaterThen или gt - >
--   lessThenOrEqual или lte - <=
--   lessThen или lt - <
--   not - !=
+-   `equal` - `==`
+-   `greaterThenOrEqual` или `gte` - `>=`
+-   `greaterThen` или `gt` - `>`
+-   `lessThenOrEqual` или `lte` - `<=`
+-   `lessThen` или `lt` - `<`
+-   `not` - `!=`
 
 Доступные типы сортировки:
 
--   az - от меньшего к большему
--   za - от больщего к меньшему
+-   `az` - от меньшего к большему
+-   `za` - от больщего к меньшему
 
 Когда все готово, сводная таблица получается методом `aggregate`.
 
 ```ts
-import { PivotTableView } from "pivot-table-engine";
+import { Cell } from "pivot-table-engine";
 
-const result: PivotTableView = pivotTable.aggregate();
+const result: Cell[][] = pivotTable.aggregate();
 ```
 
-В результате получается следующий объект:
-
-```
-╔═══════════════╤════════════════╗
-║ result.offset │ result.columns ║
-╟───────────────┼────────────────╢
-║ result.rows   │ result.values  ║
-╚═══════════════╧════════════════╝
-```
-
-`values` представляет из себя массив массивов чисел или NaN для пустых ячеек, для которых
-нет пересечения строк и колонок. `columns` и `rows` - массив массивов объектов типа `Cell` с
-свойствами `label`, а также `colspan` и `rowspan`, и соответствует тегу `td`:
-
-```html
-<td colspan="cell.colspan" rowspan="cell.rowspan">cell.label</td>
-```
+В результате получается массив массивов объектов типа `Cell`.

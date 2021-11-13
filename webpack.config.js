@@ -1,3 +1,5 @@
+const { resolve } = require("path");
+
 module.exports = env => ({
     mode: env.production ? "production" : "development",
 
@@ -5,7 +7,7 @@ module.exports = env => ({
 
     entry: "./src/index.ts",
     output: {
-        path: __dirname,
+        path: resolve("package"),
         filename: "index.js",
         library: {
             type: "commonjs",
